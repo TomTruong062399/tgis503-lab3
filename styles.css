@@ -1,0 +1,25 @@
+#bike {
+  width: 95vh;
+  height: 75vh;
+  float: left;
+}
+
+#car {
+  width: 95vh;
+  height: 75vh;
+  float: right;
+}
+
+body {
+  background-color: #6582C8;
+}
+
+h1 {
+  text-align: center;
+  font-family: 'PT Sans Narrow', sans-serif;
+}
+
+h2 {
+  text-align: center;
+  font-family: 'PT Sans Narrow', sans-serif;
+}

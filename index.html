@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> </title>
+    <link rel="stylesheet" href="styles.css" type="text/css">
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet'/>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans+Narrow&display=swap" rel="stylesheet">
+  </head>
+
+  <body>
+    <h1>Public Parking Spaces for Bicycles and Vehicles in Seattle, WA</h1>
+    <h2><b>Bike Racks</b> <i>(Left)</i> | <b>Parking Garages/Lots</b> <i>(Right)</i></h2>
+
+    <div id='bike'></div>
+    <div id='car'></div>
+
+    <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoidG9tdHJ1b25nMDYyMzk5IiwiYSI6ImNrYTFtOW5jOTAyNnozZXBnbmFwems0bXcifQ.fgkM8mIr6Zn7LC5eA1gi_w';
+
+    var bikemap = new mapboxgl.Map({
+      container: 'bike',
+      style: 'mapbox://styles/tomtruong062399/ckhwff0rp16te1as76g2nu95c',
+      center: [-122.3640445, 47.6069252],
+      zoom: 10,
+      maxZoom: 12,
+      minZoom: 9
+    });
+
+    bikemap.on('load', function() {
+    bikemap.addSource('bike_racks', {
+      "type": "geojson",
+      "data": "data/Bike_Racks.geojson"
+    });
+
+    bikemap.addLayer({
+      "id": "racks",
+      "type": "symbol",
+      "source": "bike_racks",
+      "layout": {
+        "icon-image": "bicycle-15.svg"
+      }
+    });
+  });
+
+    var carmap = new mapboxgl.Map({
+      container: 'car',
+      style: 'mapbox://styles/tomtruong062399/ckhwff0rp16te1as76g2nu95c',
+      center: [-122.3640445, 47.6069252],
+      zoom: 10,
+      maxZoom: 12,
+      minZoom: 9
+    });
+
+    </script>
+  </body>
+</html>
