@@ -3,18 +3,45 @@
   <head>
     <title> </title>
     <link rel="stylesheet" href="styles.css" type="text/css">
-
     <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet'/>
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans+Narrow&display=swap" rel="stylesheet">
   </head>
 
   <body>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.css" type="text/css"/>
+
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+
     <h1>Public Parking Spaces for Bicycles and Vehicles in Seattle, WA</h1>
-    <h2><b>Bike Racks</b> <i>(Left)</i> | <b>Parking Garages/Lots</b> <i>(Right)</i></h2>
+
+    <p>This series of web maps showcases all the public parking spaces for both bicycles and vehicles
+		available within the city boundaries of Seattle, WA. This consists of <a href="https://data-seattlecitygis.opendata.arcgis.com/datasets/bike-racks">
+		Bike Racks</a> <i>(left)</i> and <a href="https://data-seattlecitygis.opendata.arcgis.com/datasets/public-garages-or-parking-lots">Public Garages or Parking Lots</a>
+    <i>(right)</i> from the <a href="https://data-seattlecitygis.opendata.arcgis.com/">Seattle GeoData</a> website. Each zoom-in into each map reveals more spots of bike racks
+    or parking lots/garages in that respective area.</p>
+
+    <p>An address geocoder is provided on each map and would zoom into and showcases spots nearby a Seattle address. The purpose of including a vector layer for Seattle's
+    <a href="https://data-seattlecitygis.opendata.arcgis.com/datasets/census-tract-2010-housing-statistics">2010 Census Tracts</a> is to show the density of housing units
+    in each tract (I was trying to get <a href="https://data-seattlecitygis.opendata.arcgis.com/datasets/census-tract-2010-population-statistics">population data</a>,
+    but I cannot download the GeoJSON). Looking at it based on housing units was the next best thing and I just wanted to see if the city placed these public parking spaces
+    proportionally, where appropriate. The <a href="https://thenounproject.com/term/bike-rack/1013120/">Bike Rack Icon</a> and the <a href="https://thenounproject.com/term/car-parking/545131/">
+    Car Parking Icon</a> were provided by <a href="https://thenounproject.com/">The Noun Project</a>.
 
     <div id='bike'></div>
     <div id='car'></div>
+
+    <div class="legend">
+      <h4>Total Housing Units</h4>
+      <div><span style="background-color: #723122; opacity: 0.75"></span>Over 5,000</div>
+      <div><span style="background-color: #8B4225; opacity: 0.75"></span>4,000-4,999</div>
+      <div><span style="background-color: #A25626; opacity: 0.75"></span>3,000-3,999</div>
+      <div><span style="background-color: #B86B25; opacity: 0.75"></span>2,000-2,999</div>
+      <div><span style="background-color: #CA8323; opacity: 0.75"></span>1,000-1,999</div>
+      <div><span style="background-color: #DA9C20; opacity: 0.75"></span>0-999</div>
+    </div>
 
     <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidG9tdHJ1b25nMDYyMzk5IiwiYSI6ImNrYTFtOW5jOTAyNnozZXBnbmFwems0bXcifQ.fgkM8mIr6Zn7LC5eA1gi_w';
@@ -28,21 +55,81 @@
       minZoom: 9
     });
 
-    bikemap.on('load', function() {
-    bikemap.addSource('bike_racks', {
-      "type": "geojson",
-      "data": "data/Bike_Racks.geojson"
+    bikemap.on('load', function(){
+      bikemap.addSource('census_tracts', {
+        "type": "geojson",
+        "data": "data/Census_Tract_-_2010_Housing_Statistics.geojson"
+      });
+
+      bikemap.addLayer({
+        "id": "tracts",
+        "type": "fill",
+        "source": "census_tracts",
+        "paint": {
+          "fill-color": {
+            "property": "Housing_Units_Total",
+            "stops": [
+              [1000, '#DA9C20'],
+              [2000, '#CA8323'],
+              [3000, '#B86B25'],
+              [4000, '#A25626'],
+              [5000, '#8B4225'],
+              [6000, '#723122']
+            ]
+          },
+          "fill-opacity": 0.75,
+          "fill-outline-color": "#ffffff"
+        }
+      });
     });
 
-    bikemap.addLayer({
-      "id": "racks",
-      "type": "symbol",
-      "source": "bike_racks",
-      "layout": {
-        "icon-image": "bicycle-15.svg"
+    bikemap.on('load', function() {
+      bikemap.loadImage('bike.png',
+      function(error, image) {
+        if (error) throw error;
+        bikemap.addImage('bike', image);
+        bikemap.addSource('bike_racks', {
+          "type": "geojson",
+          "data": "data/Bike_Racks.geojson"
+        });
+
+      bikemap.addLayer({
+        "id": "bracks",
+        "type": "symbol",
+        "source": "bike_racks",
+        "layout": {
+          "icon-image": "bike",
+          "icon-size": 0.2
+        }
+      });
       }
-    });
+    );
   });
+
+      bikemap.on('click', 'bracks', function(e) {
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML("<b><u>Location</u></b>: " + e.features[0].properties.UNITDESC +
+                  "<br><b><u>Capacity</u></b>: " + e.features[0].properties.RACK_CAPACITY + " bicycles" +
+                  "<br><b><u>Condition</u></b>: " + e.features[0].properties.CONDITION)
+          .addTo(bikemap);
+      });
+
+      bikemap.on('mouseenter', 'bracks', function() {
+        bikemap.getCanvas().style.cursor = 'pointer';
+      });
+
+      bikemap.on('mouseleave', 'bracks', function() {
+        bikemap.getCanvas().style.cursor = '';
+      });
+
+      bikemap.addControl(
+        new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl: mapboxgl
+        })
+      );
+
 
     var carmap = new mapboxgl.Map({
       container: 'car',
@@ -52,6 +139,82 @@
       maxZoom: 12,
       minZoom: 9
     });
+
+    carmap.on('load', function(){
+      carmap.addSource('census_tracts', {
+        "type": "geojson",
+        "data": "data/Census_Tract_-_2010_Housing_Statistics.geojson"
+      });
+
+      carmap.addLayer({
+        "id": "tracts",
+        "type": "fill",
+        "source": "census_tracts",
+        "paint": {
+          "fill-color": {
+            "property": "Housing_Units_Total",
+            "stops": [
+              [0, '#E6B71E'],
+              [1000, '#BA9C20'],
+              [2000, '#CA8323'],
+              [3000, '#B86B25'],
+              [4000, '#A25626'],
+              [5000, '#8B4225'],
+              [6000, '#723122']
+            ]
+          },
+          "fill-opacity": 0.75,
+          "fill-outline-color": "#ffffff"
+        }
+      });
+    });
+
+    carmap.on('load', function() {
+      carmap.loadImage('car.png',
+      function(error, image) {
+        if (error) throw error;
+        carmap.addImage('car', image);
+        carmap.addSource('parking', {
+          "type": "geojson",
+          "data": "data/Public_Garages_or_Parking_Lots.geojson"
+        });
+
+      carmap.addLayer({
+        "id": "cpark",
+        "type": "symbol",
+        "source": "parking",
+        "layout": {
+          "icon-image": "car",
+          "icon-size": 0.2
+        }
+      });
+      }
+    );
+  });
+
+      carmap.on('click', 'cpark', function(e) {
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML("<b><u>Name</u></b>: " + e.features[0].properties.FAC_NAME +
+                  "<br><b><u>Address</u></b>: " + e.features[0].properties.DEA_FACILITY_ADDRESS +
+                  "<br><b><u>Capacity</u></b>: " + e.features[0].properties.DEA_STALLS + " spots")
+          .addTo(carmap)
+      });
+
+        carmap.on('mouseenter', 'cpark', function() {
+          carmap.getCanvas().style.cursor = 'pointer';
+        });
+
+        carmap.on('mouseleave', 'cpark', function() {
+          carmap.getCanvas().style.cursor = '';
+        });
+
+      carmap.addControl(
+        new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl: mapboxgl
+        })
+      );
 
     </script>
   </body>
