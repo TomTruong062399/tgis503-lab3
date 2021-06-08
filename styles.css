@@ -1,11 +1,11 @@
 #bike {
-  width: 90vh;
+  width: 75vh;
   height: 75vh;
   float: left;
 }
 
 #car {
-  width: 90vh;
+  width: 75vh;
   height: 75vh;
   float: right;
 }
